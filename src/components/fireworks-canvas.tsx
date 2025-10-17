@@ -97,7 +97,6 @@ export default function FireworksCanvas({
   withSound?: boolean
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const mountedRef = useRef(false)
 
   useEffect(() => {
     if (!canvasRef.current) return

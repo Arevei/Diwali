@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { Copy, Check } from "lucide-react"
 import FireworksCanvas from "@/components/fireworks-canvas"
 import { playDiwaliTune } from "@/lib/music"
+import Link from "next/link"
+import Image from "next/image"
 
 export default function DiwaliWishCreator() {
   const [formData, setFormData] = useState({
@@ -52,15 +54,26 @@ export default function DiwaliWishCreator() {
     }
   }, [])
 
-  const handleInputChange = (e:any) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
+  interface FormData {
+    senderName: string
+    recipientName: string
+    message: string
+  }
+
+  const handleInputChange = (e: { target: { name: string; value: string } }) => {
+    const { name: rawName, value } = e.target
+    const name = rawName as keyof FormData
+    setFormData((prev: FormData) => ({
       ...prev,
       [name]: value,
     }))
   }
 
-  const handleSubmit = (e:any) => {
+  interface SubmitHandler {
+    (e: React.MouseEvent<HTMLButtonElement>): void
+  }
+
+  const handleSubmit: SubmitHandler = (e) => {
     e.preventDefault()
     if (formData.senderName && formData.recipientName && formData.message) {
       setSubmitted(true)
@@ -80,7 +93,7 @@ export default function DiwaliWishCreator() {
   }
 
   const shareOnPlatform = (platform:"whatsapp" | "instagram" | "linkedin") => {
-    const text = `Check out my personalized Diwali wish! ${shareLink}`
+    const text = `${shareLink}`
     const urls: Record<"whatsapp" | "instagram" | "linkedin", string>= {
       whatsapp: `https://wa.me/?text=${encodeURIComponent(text)}`,
       instagram: `https://instagram.com`,
@@ -94,8 +107,8 @@ export default function DiwaliWishCreator() {
       id: i,
       left: Math.random() * 100,
       delay: Math.random() * 2,
-      duration: 4 + Math.random() * 2,
-      type: i % 3 === 0 ? "rocket" : i % 3 === 1 ? "anaar" : "diya",
+      duration: 7 + Math.random() * 2,
+      type: i % 3 === 0 ? "rocket" :  "anaar",
     }))
 
     return (
@@ -105,27 +118,25 @@ export default function DiwaliWishCreator() {
             key={el.id}
             className="absolute pointer-events-none"
             style={{
-              left: `${el.left}%`,
-              top: "-50px",
-              animation: `float-up ${el.duration}s ease-in infinite`,
-              animationDelay: `${el.delay}s`,
-            }}
+            left: `${el.left}%`,
+            animation: `${
+              el.type === "anaar" ? "rise-up" : "float-around"
+            } ${el.duration}s ease-in-out infinite`,
+            animationDelay: `${el.delay}s`,
+          }}
           >
             {el.type === "rocket" && (
-              <div className="text-3xl animate-spin" style={{ animationDuration: "0.8s" }}>
-                🚀
+               <div className="text-3xl " style={{ animationDuration: "0.8s" }}>
+                <Image src="/charkhi.gif" className="w-16" alt="" width={300} height={300} />
               </div>
+              
             )}
             {el.type === "anaar" && (
               <div className="text-2xl" style={{ animation: "sparkle 0.6s ease-in-out infinite" }}>
-                ✨
+                <Image src="/sky.png" className="w-16" alt="" width={300} height={300}/>
               </div>
             )}
-            {el.type === "diya" && (
-              <div className="text-2xl" style={{ animation: "flicker 1.5s ease-in-out infinite" }}>
-                🪔
-              </div>
-            )}
+            
           </div>
         ))}
         <style>{`
@@ -143,17 +154,42 @@ export default function DiwaliWishCreator() {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(1.3); }
           }
-          @keyframes flicker {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+            @keyframes rise-up {
+          0% {
+            transform: translateY(100vh) scale(0.8);
+            opacity: 0;
           }
+          20% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(-20vh) scale(1);
+            opacity: 0;
+          }
+        }
+
+          @keyframes float-around {
+          0% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+          }
+          50% {
+            transform: translateY(-40vh) rotate(15deg);
+            opacity: 0.9;
+          }
+          100% {
+            transform: translateY(0) rotate(-15deg);
+            opacity: 1;
+          }
+        }
+         
         `}</style>
       </>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-purple-50 overflow-x-hidden relative">
+    <div className="min-h-screen  overflow-x-hidden relative">
       <FireworksCanvas
         className="pointer-events-none fixed inset-0 z-0"
         autoStart={true}
@@ -175,10 +211,10 @@ export default function DiwaliWishCreator() {
           <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-yellow-500 to-purple-600 mb-3">
             {isSharedWish ? "Diwali Wish for You" : "Create Your Personalized Diwali Wish"}
           </h1>
-          <p className="text-lg text-gray-700">
+          <p className="text-lg text-gray-300">
             {isSharedWish
               ? "Someone special sent you a Diwali wish!"
-              : "Light up someone's inbox and timeline with joy this Diwali!"}
+              : "Light up someone inbox and timeline with joy this Diwali!"}
           </p>
         </div>
 
@@ -243,7 +279,6 @@ export default function DiwaliWishCreator() {
             <div className="relative">
               <div
                 className="bg-gradient-to-br from-purple-600 via-orange-500 to-yellow-400 rounded-3xl p-8 md:p-12 shadow-2xl"
-                style={{ animation: "pulse 2s ease-in-out infinite" }}
               >
                 {/* Card Content */}
                 <div className="bg-white/95 backdrop-blur rounded-2xl p-8 md:p-10 text-center space-y-6">
@@ -263,7 +298,7 @@ export default function DiwaliWishCreator() {
 
                   {/* Message */}
                   <p className="text-lg md:text-xl text-gray-800 italic font-medium leading-relaxed">
-                    "{formData.message}"
+                    {formData.message}
                   </p>
 
                   {/* Decorative Elements */}
@@ -339,9 +374,17 @@ export default function DiwaliWishCreator() {
         )}
       </div>
 
+      <div className=" flex flex-row ">
+        <Image src="/diwali.png" className="w-1/2" alt="" width={800} height={800} />
+        <Image src="/home2.png" className="w-1/2" alt="" width={800} height={800}/>
+      </div>
+
       {/* Footer */}
-      <footer className="relative z-10 text-center py-8 px-4 border-t border-orange-200 mt-12 bg-white/30">
-        <p className="text-gray-700 font-semibold">✨ Made with Love for Diwali ✨</p>
+      <footer className="relative z-10 flex justify-center items-center text-center py-8 px-4 border-t   ">
+
+       <Link href="https://www.arevei.com/" className="text-orange-600 flex justify-center items-center"> <Image src="/company-logo.png" className="w-14 rounded-b-md" alt="" width={300} height={300}/>
+        <p className="text-white font-semibold">✨ Made by Arevei ✨</p>
+      </Link>
       </footer>
     </div>
   )

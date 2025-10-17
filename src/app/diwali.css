@@ -1,6 +1,7 @@
 body {
   margin: 0;
   font-family: "Salsa", cursive;
+  background-color: black;
 }
 
 .jhalar {
@@ -10,10 +11,8 @@ body {
 
 .hero-section {
   /* min-height: 100vh; */
-  background-color: #f99501;
-  background-image: url(/images/orange-backdrop.jpg);
-  background-size: cover;
-  background-repeat: no-repeat;
+  background-color: black;
+  
 }
 
 .pragraph-and-audio {
@@ -26,11 +25,11 @@ body {
 }
 
 audio::-webkit-media-controls-panel {
-  background-color: #fbd8a4;
+  background-color: black;
 }
 
 .audio-container {
-  background-color: #fbd8a4;
+  background-color: black;
   max-width: max-content;
   border-radius: 45px;
   display: flex;
