@@ -19,9 +19,8 @@ const styleScript = Style_Script({
 })
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
-  generator: "v0.app",
+  title: "Happy Diwali Wishes",
+  description: "Enjoy  diwali with Arevei",
 }
 
 export default function RootLayout({
