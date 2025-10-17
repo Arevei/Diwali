@@ -1,6 +1,5 @@
 // audio-utils.ts
 let audioCtx: AudioContext | null = null
-let tuneSourceNodes: (AudioNode | null)[] = []
 
 function ensureCtx() {
   if (typeof window === "undefined") return null
@@ -9,19 +8,6 @@ function ensureCtx() {
     audioCtx = new Ctor()
   }
   return audioCtx
-}
-
-/** ADSR envelope helper */
-function applyADSRGain(
-  g: GainNode,
-  t0: number,
-  { attack = 0.01, decay = 0.06, sustain = 0.6, release = 0.08, peak = 0.35 } = {}
-) {
-  g.gain.cancelScheduledValues(t0)
-  g.gain.setValueAtTime(0.0001, t0)
-  g.gain.exponentialRampToValueAtTime(Math.max(0.0001, peak), t0 + attack)
-  g.gain.exponentialRampToValueAtTime(Math.max(0.0001, peak * sustain), t0 + attack + decay)
-  // release must be scheduled by caller when note stops
 }
 
 
@@ -115,18 +101,10 @@ export function playFireworksSound() {
   boomOsc.start(boomTime)
   boomOsc.stop(boomTime + 0.45)
 
-  // small reverb-like tail: a simple stereo chorus-ish delay (light)
-  // (optional — kept subtle so playback remains crisp)
-  // not implemented as heavy convolution (keeps code simple)
+  
 }
 
-/**
- * Play an audio file by URL (better for accurate music or recorded Diwali songs).
- * - url: path or absolute URL to an audio file
- * - loop: whether to loop
- *
- * NOTE: For cross-origin URLs, the server must allow CORS (Access-Control-Allow-Origin).
- */
+
 export async function playAudioPath(url: string, loop = false) {
   const ctx = ensureCtx()
   if (!ctx) throw new Error("AudioContext not available")
