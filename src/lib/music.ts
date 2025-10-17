@@ -1,6 +1,5 @@
 // audio-utils.ts
 let audioCtx: AudioContext | null = null
-let isTunePlaying = false
 let tuneSourceNodes: (AudioNode | null)[] = []
 
 function ensureCtx() {
@@ -25,80 +24,11 @@ function applyADSRGain(
   // release must be scheduled by caller when note stops
 }
 
-/** Schedule a melodic tone with ADSR */
-function scheduleTone(
-  ctx: AudioContext,
-  time: number,
-  freq: number,
-  dur = 0.28,
-  opts: { type?: OscillatorType; attack?: number; decay?: number; sustain?: number; release?: number } = {}
-) {
-  const o = ctx.createOscillator()
-  const g = ctx.createGain()
 
-  o.type = opts.type ?? "triangle"
-  o.frequency.value = freq
 
-  // gentle highpass to reduce rumble, then into destination
-  const hp = ctx.createBiquadFilter()
-  hp.type = "highpass"
-  hp.frequency.value = 90
 
-  applyADSRGain(g, time, {
-    attack: opts.attack ?? 0.02,
-    decay: opts.decay ?? 0.06,
-    sustain: opts.sustain ?? 0.7,
-    peak: 0.35,
-  })
 
-  // schedule release
-  const release = opts.release ?? 0.06
-  const releaseStart = time + dur
-  g.gain.exponentialRampToValueAtTime(0.0001, releaseStart + release)
 
-  o.connect(g).connect(hp).connect(ctx.destination)
-  o.start(time)
-  o.stop(releaseStart + release + 0.02)
-
-  return { osc: o, gain: g, hp }
-}
-
-/** Convert note name to frequency (expandable) */
-function notesToFreq(note: string) {
-  const map: Record<string, number> = {
-    C4: 261.63,
-    D4: 293.66,
-    E4: 329.63,
-    G4: 392.0,
-    A4: 440.0,
-    C5: 523.25,
-    D5: 587.33,
-    E5: 659.25,
-    G5: 783.99,
-    A5: 880.0,
-    C6: 1046.5,
-    D6: 1174.7,
-    E6: 1318.5,
-    G6: 1568.0,
-  }
-  return map[note] ?? 440.0
-}
-
-/** Stop all currently scheduled tune nodes */
-function stopTuneNodes() {
-  tuneSourceNodes.forEach((n) => {
-    try {
-      // many nodes may be GainNode or Oscillator; disconnect is safe
-      n?.disconnect()
-    } catch {}
-  })
-  tuneSourceNodes = []
-}
-
-/**
- * playDiwaliTune - improved synth melody with small arpeggios
- * action: "play" | "pause"
- */
 let audio: HTMLAudioElement | null = null
 let isPlaying = false
 
@@ -136,44 +66,10 @@ export async function playDiwaliTune(action: "play" | "pause" = "play") {
   }
 }
 
-/**
- * Create a short burst of filtered white noise (used for firework crackles)
- */
-function createNoiseBurst(
-  ctx: AudioContext,
-  time: number,
-  duration: number,
-  filterFreq = 1200,
-  gainVal = 0.25
-) {
-  const bufferSize = Math.floor(ctx.sampleRate * duration)
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
-  const data = buffer.getChannelData(0)
-  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize) // decaying noise
 
-  const src = ctx.createBufferSource()
-  src.buffer = buffer
-  src.loop = false
 
-  const bp = ctx.createBiquadFilter()
-  bp.type = "bandpass"
-  bp.frequency.value = filterFreq
-  bp.Q.value = 1.2
 
-  const g = ctx.createGain()
-  g.gain.setValueAtTime(gainVal, time)
-  g.gain.exponentialRampToValueAtTime(0.0001, time + duration)
 
-  src.connect(bp).connect(g).connect(ctx.destination)
-  src.start(time)
-  src.stop(time + duration + 0.02)
-  return { src, g, bp }
-}
-
-/**
- * playFireworksSound - improved firecracker + boom
- * Produces multiple crackles (filtered noise bursts) + a low boom
- */
 export function playFireworksSound() {
   const ctx = ensureCtx()
   if (!ctx) return
@@ -193,14 +89,7 @@ export function playFireworksSound() {
   // random burst of crackles
   const burstCount = 3 + Math.floor(Math.random() * 4)
   for (let i = 0; i < burstCount; i++) {
-    const startDelay = Math.random() * 0.12
-    const dur = 0.06 + Math.random() * 0.16
-    // higher freq for bright crackles, vary Q for character
-    const freq = 800 + Math.random() * 4200
-    const gain = 0.08 + Math.random() * 0.28
-    createNoiseBurst(ctx, now + startDelay, dur, freq, gain)
-
-    // small metallic ping (high sine) layered on some bursts
+   
     
         var randomNumber = Math.floor(Math.random() * sounds.length);
         audio.src = sounds[randomNumber].prefix + sounds[randomNumber].data;
@@ -220,8 +109,7 @@ export function playFireworksSound() {
   boomGain.gain.setValueAtTime(0.20, boomTime)
   boomGain.gain.exponentialRampToValueAtTime(0.001, boomTime + 0.45)
 
-  // add a lowpass-filtered noise layer to give "thump"
-  const thump = createNoiseBurst(ctx, boomTime, 0.35, 200, 0.12)
+
 
   boomOsc.connect(boomGain).connect(ctx.destination)
   boomOsc.start(boomTime)
