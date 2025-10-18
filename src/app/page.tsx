@@ -6,6 +6,16 @@ import FireworksCanvas from "@/components/fireworks-canvas"
 import { playDiwaliTune } from "@/lib/music"
 import Link from "next/link"
 import Image from "next/image"
+import {
+  WhatsappShareButton,
+  LinkedinShareButton,
+  FacebookShareButton,
+  TwitterShareButton,
+  WhatsappIcon,
+  LinkedinIcon,
+  FacebookIcon,
+  TwitterIcon,
+} from "react-share"
 
 export default function DiwaliWishCreator() {
   const [formData, setFormData] = useState({
@@ -102,6 +112,8 @@ export default function DiwaliWishCreator() {
     if (urls[platform]) window.open(urls[platform], "_blank")
   }
 
+  
+
   const FloatingElements = () => {
     const elements = Array.from({ length: 8 }, (_, i) => ({
       id: i,
@@ -189,7 +201,27 @@ export default function DiwaliWishCreator() {
   }
 
   return (
-    <div className="min-h-screen  overflow-x-hidden relative">
+    <div className="min-h-screen  overflow-x-hidden relative ">
+      <div className="flex justify-between items-center  sticky top-0 z-10 max-w-5xl  mx-8 md:mx-auto">
+            <div className="my-auto " >
+            <Link href="https://www.arevei.com/" className="flex items-center gap-2">
+            <Image src="/AR-Wordmark.svg" className="w-14 " alt="" width={300} height={300}/>
+          </Link>
+            </div>
+
+          <div className="flex justify-center  mt-2">
+            <Image src="/company-logo.png" className="w-16 h-16 rounded-full" alt="Arevei" width={300} height={300}/>
+          </div>
+
+          <Link
+            href="https://www.instagram.com/arevei_official?igsh=MW5ranhrd2J5Njg2aQ=="
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white bg-clip-text text-transparent font-semibold flex items-center gap-1"
+          >
+            📸 Follow
+          </Link>
+          </div>
       <FireworksCanvas
         className="pointer-events-none fixed inset-0 z-0"
         autoStart={true}
@@ -205,16 +237,17 @@ export default function DiwaliWishCreator() {
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 md:py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="flex justify-center mb-4">
+           <div className="flex justify-center mb-4">
             <span className="text-5xl animate-bounce">🎆</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-yellow-500 to-purple-600 mb-3">
+          
+          <h1 className="text-4xl md:text-5xl font-bold font-canela text-transparent bg-clip-text bg-gradient-to-r from-green-600  to-blue-600 mb-3">
             {isSharedWish ? "Diwali Wish for You" : "Create Your Personalized Diwali Wish"}
           </h1>
-          <p className="text-lg text-gray-300">
+          <p className="text-lg text-gray-200 font-poppins">
             {isSharedWish
               ? "Someone special sent you a Diwali wish!"
-              : "Light up someone inbox and timeline with joy this Diwali!"}
+              : "Light up someone's inbox and timeline with joy this Diwali!"}
           </p>
         </div>
 
@@ -314,42 +347,42 @@ export default function DiwaliWishCreator() {
               </div>
             </div>
 
-            {!isSharedWish && (
+           {!isSharedWish && (
               <div className="bg-white/95 backdrop-blur rounded-3xl shadow-xl p-8">
-                <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Share Your Diwali Wish! 🌟</h3>
+                <h3 className="text-2xl font-bold font-canela text-gray-800 mb-6 text-center">
+                  Share Your Diwali Wish! 🌟
+                </h3>
 
-                {/* Share Buttons */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <button
-                    onClick={() => shareOnPlatform("whatsapp")}
-                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl transition transform hover:scale-105"
+                <div className="flex justify-center gap-4 mb-6 flex-wrap">
+                  <Link href={`https://wa.me/?text=${encodeURIComponent(`🎉 Happy Diwali! Create your wish at wish.arevei.com\n${shareLink}`)}`} target="_blank" rel="noopener noreferrer">
+                    <WhatsappIcon size={48} round />
+                  </Link>
+                  <LinkedinShareButton url={shareLink} title={`Diwali Wish from ${formData.senderName}`}>
+                    <LinkedinIcon size={48} round />
+                  </LinkedinShareButton>
+                 
+                  <TwitterShareButton
+                    url={shareLink}
+                    title={`Happy Diwali! Check out my personalized wish from ${formData.senderName}`}
                   >
-                    💬 WhatsApp
-                  </button>
-                  <button
-                    onClick={() => shareOnPlatform("instagram")}
-                    className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-4 rounded-xl transition transform hover:scale-105"
-                  >
-                    📸 Instagram
-                  </button>
-                  <button
-                    onClick={() => shareOnPlatform("linkedin")}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition transform hover:scale-105"
-                  >
-                    💼 LinkedIn
-                  </button>
+                    <TwitterIcon size={48} round />
+                  </TwitterShareButton>
+                </div>
+
+                {/* Copy Link Button */}
+                <div className="flex gap-2 justify-center mb-6">
                   <button
                     onClick={copyToClipboard}
-                    className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-xl transition transform hover:scale-105 flex items-center justify-center gap-2"
+                    className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl transition transform hover:scale-105 flex items-center justify-center gap-2"
                   >
                     {copied ? <Check size={18} /> : <Copy size={18} />}
-                    {copied ? "Copied!" : "Copy"}
+                    {copied ? "Copied!" : "Copy Link"}
                   </button>
                 </div>
 
                 {/* Link Display */}
                 <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 text-center">
-                  <p className="text-sm text-gray-600 mb-2">Your shareable link:</p>
+                  <p className="text-sm text-gray-600 mb-2 font-poppins">Your shareable link:</p>
                   <p className="font-mono text-orange-600 font-bold break-all text-sm">{shareLink}</p>
                 </div>
               </div>
@@ -380,11 +413,12 @@ export default function DiwaliWishCreator() {
       </div>
 
       {/* Footer */}
-      <footer className="relative z-10 flex justify-center items-center text-center py-8 px-4 border-t   ">
-
-       <Link href="https://www.arevei.com/" className="text-orange-600 flex justify-center items-center"> <Image src="/company-logo.png" className="w-14 rounded-b-md" alt="" width={300} height={300}/>
-        <p className="text-white font-semibold">✨ Made by Arevei ✨</p>
+      <footer className="relative z-10 flex justify-center items-center text-center py-2 px-4 border-t opacity-80 bg-black/90">
+       <div className=" rounded-full bg-gray-800 p-2">
+       <Link href="https://www.arevei.com/" className="text-orange-600 flex justify-center items-center"> <Image src="/company-logo.png" className="w-14 rounded-full" alt="" width={300} height={300}/>
+        <p className="text-white font-semibold px-3">✨ Made by Arevei ✨</p>
       </Link>
+      </div>
       </footer>
     </div>
   )
