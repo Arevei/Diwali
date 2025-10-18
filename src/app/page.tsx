@@ -354,7 +354,7 @@ export default function DiwaliWishCreator() {
                 </h3>
 
                 <div className="flex justify-center gap-4 mb-6 flex-wrap">
-                  <Link href={`https://wa.me/?text=${encodeURIComponent(`🎉 Happy Diwali! Create your wish at wish.arevei.com\n${shareLink}`)}`} target="_blank" rel="noopener noreferrer">
+                  <Link href={`https://wa.me/?text=${encodeURIComponent(`🎉 Happy Diwali! Create your wish at \n${shareLink}`)}`} target="_blank" rel="noopener noreferrer">
                     <WhatsappIcon size={48} round />
                   </Link>
                   <LinkedinShareButton url={shareLink} title={`Diwali Wish from ${formData.senderName}`}>
