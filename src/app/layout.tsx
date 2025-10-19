@@ -7,6 +7,8 @@ import { Suspense } from "react"
 import { Poppins } from "next/font/google"
 import "./diwali.css"
 import localFont from "next/font/local"
+import Script from "next/script"
+import GAButtonTracker from "@/components/ga-button-tracker"
 const canela = localFont({
   src: [
     {
@@ -52,6 +54,21 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${canela.variable} ${poppins.variable}`}>
       <body className={`font-poppins ${GeistSans.variable} ${GeistMono.variable}`}>
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-03NGFNELG8"
+        />
+        <Script id="google-analytics">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-03NGFNELG8');
+          `}
+        </Script>
+
+        <GAButtonTracker />
+
         <Suspense fallback={null}>{children}</Suspense>
       </body>
     </html>

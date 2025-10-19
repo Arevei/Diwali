@@ -14,8 +14,7 @@ import {
   TwitterIcon,
 } from "react-share"
 
-// import { RWebShare } from "react-web-share";
-import html2canvas from "html2canvas";
+import html2canvas from "html2canvas-pro";
 
 export default function DiwaliWishCreator() {
   const [formData, setFormData] = useState({
@@ -104,15 +103,7 @@ const [generatingImage, setGeneratingImage] = useState(false)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const shareOnPlatform = (platform:"whatsapp" | "instagram" | "linkedin") => {
-    const text = `${shareLink}`
-    const urls: Record<"whatsapp" | "instagram" | "linkedin", string>= {
-      whatsapp: `https://wa.me/?text=${encodeURIComponent(text)}`,
-      instagram: `https://instagram.com`,
-      linkedin: `https://linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareLink)}`,
-    }
-    if (urls[platform]) window.open(urls[platform], "_blank")
-  }
+ 
 
   
 
@@ -270,7 +261,7 @@ const [generatingImage, setGeneratingImage] = useState(false)
         <FloatingElements />
       </div>
 
-      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 md:py-12" ref={cardRef}>
+      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 md:py-12" >
         {/* Header */}
         <div className="text-center mb-12">
            <div className="flex justify-center mb-4">
@@ -351,9 +342,9 @@ const [generatingImage, setGeneratingImage] = useState(false)
           // Generated Card & Share Section
           <div className="space-y-8">
             {/* Festive Postcard */}
-            <div className="relative" ref={cardRef} >
+            <div className="relative"  >
               <div
-                className=" rounded-3xl p-8 md:p-12 shadow-2xl flex justify-center items-center min-h-[46rem]"
+                className=" rounded-3xl p-8 md:p-12 shadow-2xl flex justify-center items-center min-h-[46rem]" ref={cardRef}
                 style={{
     background: ` url('/Diwali-Wish-card.webp') no-repeat center/contain`,
   }}
@@ -386,7 +377,7 @@ const [generatingImage, setGeneratingImage] = useState(false)
               </div>
             </div>
 
-          {/* <button
+          <button
   onClick={generateAndDownload}
   disabled={generatingImage}
   className={`w-full relative p-[0.8px] rounded-lg transition-all duration-300 
@@ -397,7 +388,7 @@ const [generatingImage, setGeneratingImage] = useState(false)
                    py-5 px-6 text-center cursor-pointer font-semibold tracking-wide">
     {generatingImage ? "Generating..." : "Download for Free"}
   </span>
-</button> */}
+</button>
 
 
            {!isSharedWish && (
@@ -422,23 +413,7 @@ const [generatingImage, setGeneratingImage] = useState(false)
                   </TwitterShareButton>
 
 
-                  {/* <RWebShare
-                data={{
-                    text: "Check out this Diwali Wish I created!",
-                    url: shareLink,
-                    title: "Arevei | Happy Diwali! Create your wishes",
-                }}
-            >
-               <button
-  className=" relative  p-[0.8px] rounded-full  transition-all duration-300 
-             bg-[linear-gradient(135deg,_#3fdcff,_#55ff8f)] hover:from-blue-500 hover:to-green-500"
->
-  <span className="block w-full rounded-full h-full  bg-black text-white 
-                    py-3 px-3 text-center cursor-pointer">
-    <MessageSquareShare/>
-  </span>
-</button>
-            </RWebShare> */}
+                
                 </div>
                 
 
