@@ -203,123 +203,7 @@ const [generatingImage, setGeneratingImage] = useState(false)
   }
 
 
-  const captureCardAsBlob = async (mime = "image/png", quality = 0.92) => {
-  if (!cardRef.current) throw new Error("Card ref not available")
-  // html2canvas options: preserve scale and CORS images
-  const canvas = await html2canvas(cardRef.current, {
-    scale: Math.min(2, window.devicePixelRatio || 1),
-    useCORS: true,
-    allowTaint: true,
-    logging: false,
-    backgroundColor: null, // keep gradient/transparency
-  })
-  return await new Promise<Blob | null>((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), mime, quality)
-  })
-}
 
-// Helper: download blob locally
-const downloadBlob = (blob: Blob, filename = "diwali-wish.png") => {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement("a")
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
-}
-
-// Optional: upload to an API (Cloudinary example). Returns hosted image URL string.
-const uploadImageToCloudinary = async (blob: Blob) => {
-  // Replace these with your Cloudinary values or call your own server endpoint
-  const cloudName = "YOUR_CLOUD_NAME"
-  const uploadPreset = "YOUR_UNSIGNED_UPLOAD_PRESET"
-
-  const form = new FormData()
-  form.append("file", blob, "diwali-wish.png")
-  form.append("upload_preset", uploadPreset)
-
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-    method: "POST",
-    body: form,
-  })
-  if (!res.ok) throw new Error("Upload failed")
-  const data = await res.json()
-  return data.secure_url as string
-}
-
-// Helper: share using Web Share API (files)
-const shareUsingWebShare = async (blob: Blob, title = "Diwali Wish") => {
-  // prepare file
-  const file = new File([blob], "diwali-wish.png", { type: blob.type })
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    await (navigator as any).share({
-      files: [file],
-      title,
-      text: `${formData.senderName} sent you a Diwali wish!`,
-    })
-    return true
-  }
-  return false
-}
-
-// High-level: produce image + share/download options
-const generateAndDownload = async () => {
-  try {
-    setGeneratingImage(true)
-    const blob = await captureCardAsBlob("image/png")
-    if (!blob) throw new Error("Failed to capture image")
-    downloadBlob(blob)
-  } catch (err) {
-    console.error(err)
-    alert("Could not generate image.")
-  } finally {
-    setGeneratingImage(false)
-  }
-}
-
-const generateAndShare = async (platform: "webshare" | "whatsapp" | "instagram") => {
-  try {
-    setGeneratingImage(true)
-    const blob = await captureCardAsBlob("image/png")
-    if (!blob) throw new Error("Failed to capture image")
-
-    // 1) Try Web Share first (best experience on mobile)
-    if (platform === "webshare" || platform === "whatsapp" || platform === "instagram") {
-      const wsWorked = await shareUsingWebShare(blob, `Diwali Wish from ${formData.senderName}`)
-      if (wsWorked) {
-        setGeneratingImage(false)
-        return
-      }
-    }
-
-    // 2) fallback: upload to your cloud and open platform specific share link
-    // (example uses Cloudinary unsigned upload)
-    const hostedUrl = await uploadImageToCloudinary(blob)
-
-    if (platform === "whatsapp") {
-      const text = encodeURIComponent(`🎉 Happy Diwali! ${formData.senderName} sent you a wish.\n\nOpen: ${hostedUrl}`)
-      // opens WhatsApp with prefilled text (can't attach binary on web)
-      window.open(`https://wa.me/?text=${text}`, "_blank")
-    } else if (platform === "instagram") {
-      // Instagram web cannot prepopulate an image post. Suggest user to download or open mobile app.
-      // Try an Intent on Android (may or may not work) — we fallback to instructing the user.
-      const intentUrl = `intent://share?text=${encodeURIComponent(`${formData.senderName} sent you a Diwali wish`)}#Intent;scheme=instagram;package=com.instagram.android;end`
-      window.open(intentUrl, "_blank")
-      // fallback: open hosted image in new tab so user can long-press download and upload to Instagram app
-      setTimeout(() => window.open(hostedUrl, "_blank"), 600)
-    } else {
-      // generic fallback: open hosted
-      window.open(hostedUrl, "_blank")
-    }
-  } catch (err) {
-    console.error(err)
-    alert("Sharing failed. Please try downloading and sharing manually.")
-  } finally {
-    setGeneratingImage(false)
-  }
-}
 
   return (
     <div className="min-h-screen  overflow-x-hidden relative ">
@@ -471,7 +355,7 @@ const generateAndShare = async (platform: "webshare" | "whatsapp" | "instagram")
               </div>
             </div>
 
-            {/* <button
+            <button
   
   className="w-full relative  p-[0.8px] rounded-sm transition-all duration-300 
              bg-gradient-to-r from-[#3fdcff] to-[#55ff8f] hover:from-blue-500 hover:to-green-500"
@@ -480,7 +364,7 @@ const generateAndShare = async (platform: "webshare" | "whatsapp" | "instagram")
                     py-5 px-6 text-center cursor-pointer">
     Download for Free
   </span>
-</button> */}
+</button>
 
            {!isSharedWish && (
               <div className="  rounded-3xl shadow-xl p-8 bg-black">
@@ -508,12 +392,11 @@ const generateAndShare = async (platform: "webshare" | "whatsapp" | "instagram")
                 <div className="flex gap-2 justify-center mb-6">
                   <button
                     onClick={copyToClipboard}
-                    className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl transition transform hover:scale-105 flex items-center justify-center gap-2 cursor-pointer"
+                    className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl transition transform hover:scale-105 flex items-center justify-center gap-2"
                   >
                     {copied ? <Check size={18} /> : <Copy size={18} />}
                     {copied ? "Copied!" : "Copy Link"}
                   </button>
-                  
                 </div>
 
                 {/* Link Display */}

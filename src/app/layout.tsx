@@ -4,7 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import "./globals.css"
 import { Suspense } from "react"
-import { Varela as Canela, Poppins } from "next/font/google"
+import { Poppins } from "next/font/google"
 import "./diwali.css"
 import localFont from "next/font/local"
 const canela = localFont({
