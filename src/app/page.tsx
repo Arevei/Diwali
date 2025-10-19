@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Copy, Check } from "lucide-react"
 import FireworksCanvas from "@/components/fireworks-canvas"
 import { playDiwaliTune } from "@/lib/music"
@@ -16,7 +16,7 @@ import {
   FacebookIcon,
   TwitterIcon,
 } from "react-share"
-
+import html2canvas from "html2canvas"
 export default function DiwaliWishCreator() {
   const [formData, setFormData] = useState({
     senderName: "",
@@ -28,6 +28,8 @@ export default function DiwaliWishCreator() {
   const [copied, setCopied] = useState(false)
   const [shareLink, setShareLink] = useState("")
   const [isSharedWish, setIsSharedWish] = useState(false)
+  const cardRef = useRef<HTMLDivElement | null>(null)
+const [generatingImage, setGeneratingImage] = useState(false)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -200,9 +202,128 @@ export default function DiwaliWishCreator() {
     )
   }
 
+
+  const captureCardAsBlob = async (mime = "image/png", quality = 0.92) => {
+  if (!cardRef.current) throw new Error("Card ref not available")
+  // html2canvas options: preserve scale and CORS images
+  const canvas = await html2canvas(cardRef.current, {
+    scale: Math.min(2, window.devicePixelRatio || 1),
+    useCORS: true,
+    allowTaint: true,
+    logging: false,
+    backgroundColor: null, // keep gradient/transparency
+  })
+  return await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), mime, quality)
+  })
+}
+
+// Helper: download blob locally
+const downloadBlob = (blob: Blob, filename = "diwali-wish.png") => {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
+// Optional: upload to an API (Cloudinary example). Returns hosted image URL string.
+const uploadImageToCloudinary = async (blob: Blob) => {
+  // Replace these with your Cloudinary values or call your own server endpoint
+  const cloudName = "YOUR_CLOUD_NAME"
+  const uploadPreset = "YOUR_UNSIGNED_UPLOAD_PRESET"
+
+  const form = new FormData()
+  form.append("file", blob, "diwali-wish.png")
+  form.append("upload_preset", uploadPreset)
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: "POST",
+    body: form,
+  })
+  if (!res.ok) throw new Error("Upload failed")
+  const data = await res.json()
+  return data.secure_url as string
+}
+
+// Helper: share using Web Share API (files)
+const shareUsingWebShare = async (blob: Blob, title = "Diwali Wish") => {
+  // prepare file
+  const file = new File([blob], "diwali-wish.png", { type: blob.type })
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    await (navigator as any).share({
+      files: [file],
+      title,
+      text: `${formData.senderName} sent you a Diwali wish!`,
+    })
+    return true
+  }
+  return false
+}
+
+// High-level: produce image + share/download options
+const generateAndDownload = async () => {
+  try {
+    setGeneratingImage(true)
+    const blob = await captureCardAsBlob("image/png")
+    if (!blob) throw new Error("Failed to capture image")
+    downloadBlob(blob)
+  } catch (err) {
+    console.error(err)
+    alert("Could not generate image.")
+  } finally {
+    setGeneratingImage(false)
+  }
+}
+
+const generateAndShare = async (platform: "webshare" | "whatsapp" | "instagram") => {
+  try {
+    setGeneratingImage(true)
+    const blob = await captureCardAsBlob("image/png")
+    if (!blob) throw new Error("Failed to capture image")
+
+    // 1) Try Web Share first (best experience on mobile)
+    if (platform === "webshare" || platform === "whatsapp" || platform === "instagram") {
+      const wsWorked = await shareUsingWebShare(blob, `Diwali Wish from ${formData.senderName}`)
+      if (wsWorked) {
+        setGeneratingImage(false)
+        return
+      }
+    }
+
+    // 2) fallback: upload to your cloud and open platform specific share link
+    // (example uses Cloudinary unsigned upload)
+    const hostedUrl = await uploadImageToCloudinary(blob)
+
+    if (platform === "whatsapp") {
+      const text = encodeURIComponent(`🎉 Happy Diwali! ${formData.senderName} sent you a wish.\n\nOpen: ${hostedUrl}`)
+      // opens WhatsApp with prefilled text (can't attach binary on web)
+      window.open(`https://wa.me/?text=${text}`, "_blank")
+    } else if (platform === "instagram") {
+      // Instagram web cannot prepopulate an image post. Suggest user to download or open mobile app.
+      // Try an Intent on Android (may or may not work) — we fallback to instructing the user.
+      const intentUrl = `intent://share?text=${encodeURIComponent(`${formData.senderName} sent you a Diwali wish`)}#Intent;scheme=instagram;package=com.instagram.android;end`
+      window.open(intentUrl, "_blank")
+      // fallback: open hosted image in new tab so user can long-press download and upload to Instagram app
+      setTimeout(() => window.open(hostedUrl, "_blank"), 600)
+    } else {
+      // generic fallback: open hosted
+      window.open(hostedUrl, "_blank")
+    }
+  } catch (err) {
+    console.error(err)
+    alert("Sharing failed. Please try downloading and sharing manually.")
+  } finally {
+    setGeneratingImage(false)
+  }
+}
+
   return (
     <div className="min-h-screen  overflow-x-hidden relative ">
-      <div className="flex justify-between items-center  sticky top-0 z-10 max-w-5xl  mx-8 md:mx-auto">
+      {/* <div className="flex justify-between items-center  sticky top-0 z-10 max-w-5xl  mx-8 md:mx-auto">
             <div className="my-auto " >
             <Link href="https://www.arevei.com/" className="flex items-center gap-2">
             <Image src="/AR-Wordmark.svg" className="w-14 " alt="" width={300} height={300}/>
@@ -221,7 +342,7 @@ export default function DiwaliWishCreator() {
           >
             📸 Follow
           </Link>
-          </div>
+          </div> */}
       <FireworksCanvas
         className="pointer-events-none fixed inset-0 z-0"
         autoStart={true}
@@ -234,14 +355,20 @@ export default function DiwaliWishCreator() {
         <FloatingElements />
       </div>
 
-      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 md:py-12">
+      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 md:py-12" ref={cardRef}>
         {/* Header */}
         <div className="text-center mb-12">
            <div className="flex justify-center mb-4">
-            <span className="text-5xl animate-bounce">🎆</span>
+            <div className="my-auto " >
+            <Link href="https://www.arevei.com/" className="flex items-center gap-2">
+             <Image src="/company-logo.png" className="w-16 h-16 rounded-full" alt="Arevei" width={300} height={300}/>
+            <Image src="/AR-Wordmark.svg" className="w-14 " alt="" width={300} height={300}/>
+          </Link>
+            </div>
+
           </div>
           
-          <h1 className="text-4xl md:text-5xl font-bold font-canela text-transparent bg-clip-text bg-gradient-to-r from-green-600  to-blue-600 mb-3">
+          <h1 className="text-4xl md:text-5xl font-bold font-canela text-white mb-3">
             {isSharedWish ? "Diwali Wish for You" : "Create Your Personalized Diwali Wish"}
           </h1>
           <p className="text-lg text-gray-200 font-poppins">
@@ -253,55 +380,55 @@ export default function DiwaliWishCreator() {
 
         {!submitted ? (
           // Form Section
-          <div className="bg-white/95 backdrop-blur rounded-3xl shadow-2xl p-8 md:p-10 mb-8">
+          <div className=" rounded-3xl shadow-2xl p-8 md:p-10 mb-8">
             <div className="space-y-6">
               {/* Sender Name Field */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Your Name</label>
+                <label className="block text-sm font-semibold text-white mb-2">Your Name</label>
                 <input
                   type="text"
                   name="senderName"
                   value={formData.senderName}
                   onChange={handleInputChange}
                   placeholder="Enter your name"
-                  className="w-full px-4 py-3 border-2 border-yellow-200 rounded-xl focus:border-orange-500 focus:outline-none transition bg-yellow-50"
+                  className=" bg-gradient-to-r from-[#3fdcff] via-white to-white text-black w-full px-4 py-3 border-2 border-yellow-200  focus:border-[#55ff8f] focus:outline-none transition bg-yellow-50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Recipient Name</label>
+                <label className="block text-sm font-semibold text-white mb-2">Recipient Name</label>
                 <input
                   type="text"
                   name="recipientName"
                   value={formData.recipientName}
                   onChange={handleInputChange}
                   placeholder="Who are you sending this to?"
-                  className="w-full px-4 py-3 border-2 border-yellow-200 rounded-xl focus:border-orange-500 focus:outline-none transition bg-yellow-50"
+                  className="bg-gradient-to-r from-[#3fdcff] from-5% via-white  to-white  text-black w-full px-4 py-3 border-2 border-yellow-200  focus:border-[#55ff8f] focus:outline-none transition bg-yellow-50"
                 />
               </div>
 
               {/* Message Field */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Custom Message</label>
+                <label className="block text-sm font-semibold text-white mb-2">Your Wish Message</label>
                 <textarea
                   name="message"
                   value={formData.message}
                   onChange={handleInputChange}
                   placeholder="Wishing you light, love, and prosperity this Diwali!"
-                  className="w-full px-4 py-3 border-2 border-yellow-200 rounded-xl focus:border-orange-500 focus:outline-none transition bg-yellow-50 resize-none h-24"
+                  className="bg-gradient-to-r from-[#3fdcff] via-white to-white text-black w-full px-4 py-3 border-2 border-yellow-200  focus:border-[#55ff8f] focus:outline-none transition bg-yellow-50 resize-none h-24"
                 />
               </div>
 
               {/* Submit Button */}
               <button
                 onClick={handleSubmit}
-                className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-bold py-4 px-6 rounded-xl transition transform hover:scale-105 shadow-lg hover:shadow-2xl text-lg"
+                className=" cursor-pointer w-full bg-gradient-to-r from-[#3fdcff] to-[#55ff8f] hover:from-blue-500 hover:to-green-500 text-black font-semibold py-4 px-6  transition transform hover:scale-105 shadow-lg hover:shadow-2xl text-lg"
                 style={{
                   boxShadow: "0 0 20px rgba(251, 146, 60, 0.5)",
                   textShadow: "0 2px 4px rgba(0,0,0,0.1)",
                 }}
               >
-                ✨ Generate My Wish ✨
+                 Generate My Wish 
               </button>
             </div>
           </div>
@@ -309,48 +436,56 @@ export default function DiwaliWishCreator() {
           // Generated Card & Share Section
           <div className="space-y-8">
             {/* Festive Postcard */}
-            <div className="relative">
+            <div className="relative" ref={cardRef} >
               <div
-                className="bg-gradient-to-br from-purple-600 via-orange-500 to-yellow-400 rounded-3xl p-8 md:p-12 shadow-2xl"
+                className=" rounded-3xl p-8 md:p-12 shadow-2xl flex justify-center items-center min-h-[46rem]"
+                style={{
+    background: ` url('/Diwali-Wish-card.webp') no-repeat center/contain`,
+  }}
               >
                 {/* Card Content */}
-                <div className="bg-white/95 backdrop-blur rounded-2xl p-8 md:p-10 text-center space-y-6">
-                  {/* Decorative Elements */}
-                  <div className="flex justify-between text-3xl opacity-50 mb-4">
-                    <span>🎆</span>
-                    <span>🪔</span>
-                    <span>🎆</span>
-                  </div>
-
-                  <div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-purple-600 mb-2">
-                      Happy Diwali, {formData.recipientName}!
+                <div className="  rounded-2xl py-8 md:py-10 px-10 md:px-14 text-center space-y-6 max-w-sm  mt-26 mb-16 ">
+                
+                  
+                    <h2 className="text-3xl md:text-4xl font-bold text-white text-center max-w-xs mx-auto space-y-3 font-canela ">
+                      <p>Happy Diwali </p><p>{formData.recipientName}</p>
                     </h2>
-                    <p className="text-sm text-gray-600">From {formData.senderName}</p>
-                  </div>
+                    <p className="text-lg text-white max-w-sm mx-auto ">From {formData.senderName}</p>
+                  
 
                   {/* Message */}
-                  <p className="text-lg md:text-xl text-gray-800 italic font-medium leading-relaxed">
+                  <p className=" max-w-xs mx-auto mt-12  text-base  text-white leading-relaxed">
                     {formData.message}
                   </p>
 
                   {/* Decorative Elements */}
-                  <div className="flex justify-center gap-4 text-2xl">
+                  {/* <div className="flex justify-center gap-4 text-2xl">
                     <span style={{ animation: "flicker 1.5s ease-in-out infinite" }}>🪔</span>
                     <span style={{ animation: "flicker 1.5s ease-in-out infinite", animationDelay: "0.5s" }}>🪔</span>
                     <span style={{ animation: "flicker 1.5s ease-in-out infinite", animationDelay: "1s" }}>🪔</span>
-                  </div>
+                  </div> */}
 
                   {/* Footer */}
-                  <p className="text-sm text-gray-600 pt-4">✨ Made with Love ✨</p>
+                  {/* <p className="text-sm text-gray-600 pt-4">✨ Made with Love ✨</p> */}
                 </div>
               </div>
             </div>
 
+            {/* <button
+  
+  className="w-full relative  p-[0.8px] rounded-sm transition-all duration-300 
+             bg-gradient-to-r from-[#3fdcff] to-[#55ff8f] hover:from-blue-500 hover:to-green-500"
+>
+  <span className="block w-full h-full rounded-[10px] bg-black text-white 
+                    py-5 px-6 text-center cursor-pointer">
+    Download for Free
+  </span>
+</button> */}
+
            {!isSharedWish && (
-              <div className="bg-white/95 backdrop-blur rounded-3xl shadow-xl p-8">
-                <h3 className="text-2xl font-bold font-canela text-gray-800 mb-6 text-center">
-                  Share Your Diwali Wish! 🌟
+              <div className="  rounded-3xl shadow-xl p-8 bg-black">
+                <h3 className="text-2xl font-bold font-canela text-white mb-6 text-center">
+                  Share Your Diwali Wish with your loved ones
                 </h3>
 
                 <div className="flex justify-center gap-4 mb-6 flex-wrap">
@@ -373,52 +508,57 @@ export default function DiwaliWishCreator() {
                 <div className="flex gap-2 justify-center mb-6">
                   <button
                     onClick={copyToClipboard}
-                    className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl transition transform hover:scale-105 flex items-center justify-center gap-2"
+                    className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl transition transform hover:scale-105 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {copied ? <Check size={18} /> : <Copy size={18} />}
                     {copied ? "Copied!" : "Copy Link"}
                   </button>
+                  
                 </div>
 
                 {/* Link Display */}
-                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 text-center">
+                {/* <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 text-center">
                   <p className="text-sm text-gray-600 mb-2 font-poppins">Your shareable link:</p>
                   <p className="font-mono text-orange-600 font-bold break-all text-sm">{shareLink}</p>
-                </div>
+                </div> */}
               </div>
             )}
 
             {/* Create Another */}
-            <button
-              onClick={() => {
-                setSubmitted(false)
-                setIsSharedWish(false)
-                setFormData({
-                  senderName: "",
-                  recipientName: "",
-                  message: "Wishing you light, love, and prosperity this Diwali!",
-                })
-              }}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl transition"
-            >
-              {isSharedWish ? "Create Your Own Wish" : "Create Another Wish"}
-            </button>
+        <button
+  onClick={() => {
+    setSubmitted(false)
+    setIsSharedWish(false)
+    setFormData({
+      senderName: "",
+      recipientName: "",
+      message: "Wishing you light, love, and prosperity this Diwali!",
+    })
+  }}
+  className="w-full relative  p-[0.8px] rounded-sm transition-all duration-300 
+             bg-gradient-to-r from-[#3fdcff] to-[#55ff8f] hover:from-blue-500 hover:to-green-500"
+>
+  <span className="block w-full h-full rounded-[10px] bg-black text-white 
+                    py-5 px-6 text-center cursor-pointer">
+    {isSharedWish ? "Create Your Own Wish" : "Create Another Wish"}
+  </span>
+</button>
+
+
           </div>
         )}
       </div>
 
-      <div className=" flex flex-row ">
+      {/* <div className=" flex flex-row ">
         <Image src="/diwali.png" className="w-1/2" alt="" width={800} height={800} />
         <Image src="/home2.png" className="w-1/2" alt="" width={800} height={800}/>
-      </div>
+      </div> */}
 
       {/* Footer */}
-      <footer className="relative z-10 flex justify-center items-center text-center py-2 px-4 border-t opacity-80 bg-black/90">
-       <div className=" rounded-full bg-gray-800 p-2">
-       <Link href="https://www.arevei.com/" className="text-orange-600 flex justify-center items-center"> <Image src="/company-logo.png" className="w-14 rounded-full" alt="" width={300} height={300}/>
-        <p className="text-white font-semibold px-3">✨ Made by Arevei ✨</p>
+      <footer className="">
+       <Link href="https://www.arevei.com/" className="text-orange-600 flex justify-center items-center"> 
+        <p className="text-white  px-3 pb-5"> Made With Love ❤️ by Arevei </p>
       </Link>
-      </div>
       </footer>
     </div>
   )
