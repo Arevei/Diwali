@@ -14,7 +14,7 @@ import {
   TwitterIcon,
 } from "react-share"
 
-import { RWebShare } from "react-web-share";
+// import { RWebShare } from "react-web-share";
 import html2canvas from "html2canvas";
 
 export default function DiwaliWishCreator() {
@@ -422,7 +422,7 @@ const [generatingImage, setGeneratingImage] = useState(false)
                   </TwitterShareButton>
 
 
-                  <RWebShare
+                  {/* <RWebShare
                 data={{
                     text: "Check out this Diwali Wish I created!",
                     url: shareLink,
@@ -438,7 +438,7 @@ const [generatingImage, setGeneratingImage] = useState(false)
     <MessageSquareShare/>
   </span>
 </button>
-            </RWebShare>
+            </RWebShare> */}
                 </div>
                 
 
