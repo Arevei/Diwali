@@ -2,11 +2,14 @@
 
 import { useEffect } from "react"
 
-function safeGtag(...args: any[]) {
+function safeGtag(...args: unknown[]) {
   if (typeof window === "undefined") return
-  const gtag = (window as any).gtag
+  // Type window.gtag as a function accepting unknown args to avoid explicit `any`.
+  const w = window as Window & { gtag?: (...args: unknown[]) => void }
+  const gtag = w.gtag
   if (typeof gtag === "function") {
-    gtag(...args)
+    // Call with unknown[] spread - this is safe and avoids `any`.
+    ;(gtag as (...a: unknown[]) => void)(...args)
   }
 }
 
