@@ -1,22 +1,22 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Copy, Check } from "lucide-react"
+import { Copy, Check, MessageSquareShare } from "lucide-react"
 import FireworksCanvas from "@/components/fireworks-canvas"
 import { playDiwaliTune } from "@/lib/music"
 import Link from "next/link"
 import Image from "next/image"
 import {
-  WhatsappShareButton,
   LinkedinShareButton,
-  FacebookShareButton,
   TwitterShareButton,
   WhatsappIcon,
   LinkedinIcon,
-  FacebookIcon,
   TwitterIcon,
 } from "react-share"
-import html2canvas from "html2canvas"
+
+import { RWebShare } from "react-web-share";
+import html2canvas from "html2canvas";
+
 export default function DiwaliWishCreator() {
   const [formData, setFormData] = useState({
     senderName: "",
@@ -202,6 +202,37 @@ const [generatingImage, setGeneratingImage] = useState(false)
     )
   }
 
+  const generateAndDownload = async () => {
+  if (!cardRef.current) return;
+  try {
+    setGeneratingImage(true);
+
+    // Capture the card area as a canvas
+    const canvas = await html2canvas(cardRef.current, {
+      useCORS: true, // Allow images to load from other domains
+      scale: 2,      // Increases resolution
+      backgroundColor: "#000", // Fallback if transparent
+    });
+
+    // Convert canvas to blob and trigger download
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const link = document.createElement("a");
+      link.download = `Diwali-Wish-${formData.senderName || "YourWish"}.png`;
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }, "image/png");
+
+  } catch (err) {
+    console.error("Error generating image:", err);
+    alert("Something went wrong while generating your image.");
+  } finally {
+    setGeneratingImage(false);
+  }
+};
+
+
 
 
 
@@ -306,7 +337,7 @@ const [generatingImage, setGeneratingImage] = useState(false)
               {/* Submit Button */}
               <button
                 onClick={handleSubmit}
-                className=" cursor-pointer w-full bg-gradient-to-r from-[#3fdcff] to-[#55ff8f] hover:from-blue-500 hover:to-green-500 text-black font-semibold py-4 px-6  transition transform hover:scale-105 shadow-lg hover:shadow-2xl text-lg"
+                className=" cursor-pointer w-full bg-[linear-gradient(135deg,_#3fdcff,_#55ff8f)] hover:from-blue-500 hover:to-green-500 text-black font-semibold py-4 px-6  transition transform hover:scale-105 shadow-lg hover:shadow-2xl text-lg"
                 style={{
                   boxShadow: "0 0 20px rgba(251, 146, 60, 0.5)",
                   textShadow: "0 2px 4px rgba(0,0,0,0.1)",
@@ -355,16 +386,19 @@ const [generatingImage, setGeneratingImage] = useState(false)
               </div>
             </div>
 
-            <button
-  
-  className="w-full relative  p-[0.8px] rounded-sm transition-all duration-300 
-             bg-gradient-to-r from-[#3fdcff] to-[#55ff8f] hover:from-blue-500 hover:to-green-500"
+          {/* <button
+  onClick={generateAndDownload}
+  disabled={generatingImage}
+  className={`w-full relative p-[0.8px] rounded-lg transition-all duration-300 
+              bg-[linear-gradient(135deg,#3fdcff,#55ff8f)] hover:bg-[linear-gradient(135deg,#3fb0ff,#55ffa8)]
+              ${generatingImage ? "opacity-50 cursor-not-allowed" : ""}`}
 >
   <span className="block w-full h-full rounded-[10px] bg-black text-white 
-                    py-5 px-6 text-center cursor-pointer">
-    Download for Free
+                   py-5 px-6 text-center cursor-pointer font-semibold tracking-wide">
+    {generatingImage ? "Generating..." : "Download for Free"}
   </span>
-</button>
+</button> */}
+
 
            {!isSharedWish && (
               <div className="  rounded-3xl shadow-xl p-8 bg-black">
@@ -386,7 +420,27 @@ const [generatingImage, setGeneratingImage] = useState(false)
                   >
                     <TwitterIcon size={48} round />
                   </TwitterShareButton>
+
+
+                  <RWebShare
+                data={{
+                    text: "Check out this Diwali Wish I created!",
+                    url: shareLink,
+                    title: "Arevei | Happy Diwali! Create your wishes",
+                }}
+            >
+               <button
+  className=" relative  p-[0.8px] rounded-full  transition-all duration-300 
+             bg-[linear-gradient(135deg,_#3fdcff,_#55ff8f)] hover:from-blue-500 hover:to-green-500"
+>
+  <span className="block w-full rounded-full h-full  bg-black text-white 
+                    py-3 px-3 text-center cursor-pointer">
+    <MessageSquareShare/>
+  </span>
+</button>
+            </RWebShare>
                 </div>
+                
 
                 {/* Copy Link Button */}
                 <div className="flex gap-2 justify-center mb-6">
@@ -398,6 +452,8 @@ const [generatingImage, setGeneratingImage] = useState(false)
                     {copied ? "Copied!" : "Copy Link"}
                   </button>
                 </div>
+
+                
 
                 {/* Link Display */}
                 {/* <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 text-center">
@@ -419,7 +475,7 @@ const [generatingImage, setGeneratingImage] = useState(false)
     })
   }}
   className="w-full relative  p-[0.8px] rounded-sm transition-all duration-300 
-             bg-gradient-to-r from-[#3fdcff] to-[#55ff8f] hover:from-blue-500 hover:to-green-500"
+             bg-[linear-gradient(135deg,_#3fdcff,_#55ff8f)] hover:from-blue-500 hover:to-green-500"
 >
   <span className="block w-full h-full rounded-[10px] bg-black text-white 
                     py-5 px-6 text-center cursor-pointer">
